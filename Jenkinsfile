@@ -45,6 +45,13 @@ pipeline {
       }
     }
 
+    // Temporary demo stage to prove failure handling
+    stage('Intentional Failure') {
+      steps {
+        sh 'exit 1'
+      }
+    }
+
     // Stage 5 - Build and version Docker images then push to local registry
     stage('Build Docker') {
       steps {
