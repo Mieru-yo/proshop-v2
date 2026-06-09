@@ -61,8 +61,18 @@ services:
     networks:
       - proshop_net
 
+  registry:
+    image: registry:2
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    networks:
+      - proshop_net
+
   jenkins:
-    image: jenkins/jenkins:lts-jdk17
+    build:
+      context: .
+      dockerfile: jenkins/Dockerfile
     restart: unless-stopped
     user: root
     ports:

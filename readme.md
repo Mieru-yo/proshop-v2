@@ -2,6 +2,69 @@
 
 > eCommerce platform built with the MERN stack & Redux.
 
+## TP7 CI/CD Addendum
+
+### DevOps architecture
+
+- `frontend` container serves React build on internal port 3000.
+- `backend` container serves Express API on internal port 5000.
+- `mongo` container persists data through `mongo_data` volume.
+- `nginx` is the single entrypoint and routes `/` to frontend and `/api` to backend.
+- `jenkins` runs the CI/CD pipeline from `Jenkinsfile`.
+- `registry` stores versioned Docker images locally (`localhost:5001`).
+
+### Start the full stack
+
+```bash
+docker compose up -d --build
+```
+
+Jenkins is available on `http://localhost:8081`.
+
+### CI/CD pipeline stages
+
+The `Jenkinsfile` defines 7 stages:
+
+1. Checkout
+2. Install
+3. Lint
+4. Test
+5. Build Docker
+6. Deploy (main only)
+7. Health Check (main only)
+
+### Docker image versioning strategy
+
+- Each image is tagged with an immutable version tag (`v1.0`).
+- Each image is also tagged with `latest` for convenience.
+- Images are pushed to local registry:
+  - `localhost:5001/proshop-backend:latest`
+  - `localhost:5001/proshop-backend:v1.0`
+  - `localhost:5001/proshop-frontend:latest`
+  - `localhost:5001/proshop-frontend:v1.0`
+
+### Rollback procedure
+
+Rollback to a known good version in less than 5 minutes:
+
+```bash
+docker pull localhost:5001/proshop-backend:v1.0
+docker pull localhost:5001/proshop-frontend:v1.0
+
+docker tag localhost:5001/proshop-backend:v1.0 proshop-v2-backend:latest
+docker tag localhost:5001/proshop-frontend:v1.0 proshop-v2-frontend:latest
+
+docker compose up -d
+```
+
+Then verify with:
+
+```bash
+docker compose ps
+docker compose logs backend --tail 50
+docker compose logs nginx --tail 50
+```
+
 <img src="./frontend/public/images/screens.png">
 
 This project is part of my [MERN Stack From Scratch | eCommerce Platform](https://www.traversymedia.com/mern-stack-from-scratch) course. It is a full-featured shopping cart with PayPal & credit/debit payments.
