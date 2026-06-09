@@ -26,28 +26,22 @@ pipeline {
     // Stage 2 - Install backend and frontend dependencies
     stage('Install') {
       steps {
-        sh '''
-          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine npm ci
-          docker run --rm -v "$PWD:/workspace" -w /workspace/frontend node:20-alpine npm ci
-        '''
+        sh 'npm ci'
+        sh 'npm ci --prefix frontend'
       }
     }
 
     // Stage 3 - Lint backend code with ESLint
     stage('Lint') {
       steps {
-        sh '''
-          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine sh -c "npm ci && npm run lint"
-        '''
+        sh 'npm run lint'
       }
     }
 
     // Stage 4 - Run automated tests
     stage('Test') {
       steps {
-        sh '''
-          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine sh -c "npm ci && npm test"
-        '''
+        sh 'npm test'
       }
     }
 
