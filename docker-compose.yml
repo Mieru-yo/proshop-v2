@@ -1,0 +1,83 @@
+services:
+  mongo:
+    image: mongo:7-jammy
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: proshop
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - proshop_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongo:27017/proshop
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - proshop_net
+    expose:
+      - "5000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - proshop_net
+    expose:
+      - "3000"
+
+  nginx:
+    image: nginxinc/nginx-unprivileged:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    ports:
+      - "80:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - proshop_net
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    restart: unless-stopped
+    user: root
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - proshop_net
+
+volumes:
+  mongo_data:
+  jenkins_home:
+
+networks:
+  proshop_net:
+    driver: bridge
