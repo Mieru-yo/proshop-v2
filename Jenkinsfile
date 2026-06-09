@@ -27,8 +27,8 @@ pipeline {
     stage('Install') {
       steps {
         sh '''
-          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine \
-          sh -lc "npm ci && npm ci --prefix frontend"
+          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine npm ci
+          docker run --rm -v "$PWD:/workspace" -w /workspace/frontend node:20-alpine npm ci
         '''
       }
     }
@@ -37,8 +37,7 @@ pipeline {
     stage('Lint') {
       steps {
         sh '''
-          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine \
-          sh -lc "npm ci && npm run lint"
+          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine sh -c "npm ci && npm run lint"
         '''
       }
     }
@@ -47,8 +46,7 @@ pipeline {
     stage('Test') {
       steps {
         sh '''
-          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine \
-          sh -lc "npm ci && npm test"
+          docker run --rm -v "$PWD:/workspace" -w /workspace node:20-alpine sh -c "npm ci && npm test"
         '''
       }
     }
